@@ -92,13 +92,13 @@
     };
 ```
 其中events可以为如下几种类型：
-1. EPOLLIN:表示对应的文件描述符可以读
-2. EPOLLOUT:表示对应的文件描述符可以写
-3. EPOLLPRI:表示对应的文件描述符由紧急数据可读
-4. EPOLLERR:表示对应的文件描述符出错
-5. EPOLLHUP:表示对应的文件描述符被挂起
-6. EPOLLET:表示设置为ET模式
-7. EPOLLONESHOT:表示仅监听一次  
+1. `EPOLLIN`:表示对应的文件描述符可以读
+2. `EPOLLOUT`:表示对应的文件描述符可以写
+3. `EPOLLPRI`:表示对应的文件描述符由紧急数据可读
+4. `EPOLLERR`:表示对应的文件描述符出错
+5. `EPOLLHUP`:表示对应的文件描述符被挂起
+6. `EPOLLET`:表示设置为ET模式
+7. `EPOLLONESHOT`:表示仅监听一次  
    
 成功返回0 失败返回-1
 
