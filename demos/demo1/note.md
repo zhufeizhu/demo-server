@@ -26,7 +26,7 @@
 
 ## I/O复用
 
-### select函数
+### `select`函数
 *允许进程指示内核等待多个事件中的任何一个发生，并仅在由一个或多个事件发生或经历一段事件后才唤醒它*
 ```
     #include <sys/select.h>  
@@ -55,8 +55,8 @@
     FD_ISSET(5,&fset);  //检测fd=5,发现为0
 ```
 如果我们对read write或者except中的某个fd_set不感兴趣的话，直接传NULL即可
-3. maxfdp1表示待测试的描述字个数，值等于**待测试的最大描述字+1**(因此这个maxfdp1表示的意思是*maxfd plus 1* ^-^)  
-4. select函数的返回值表示所有描述字集的已就绪的总位数，如果超时则返回0
+3. `maxfdp1`表示待测试的描述字个数，值等于**待测试的最大描述字+1**(因此这个maxfdp1表示的意思是*maxfd plus 1* ^-^)  
+4. `select`函数的返回值表示所有描述字集的已就绪的总位数，如果超时则返回0
 
 ### `epoll`函数
 *与`select`函数功能类似，用于监听某个事件的发生*
@@ -73,9 +73,9 @@
 * `epoll_ctl`: epoll的事件注册函数，用于向系统注册需要监听的事件类型
 - `epfd`: epoll对应的文件描述符,即`epoll_create`的返回值
 - `op`: 表示注册动作，分别有三种
-  1. EPOLL_CTL_ADD: 注册新的fd到epfd中
-  2. EPOLL_CTL_MOD: 修改已经注册的fd的监听事件
-  3. EPOLL_CTL_DEL: 从epfd中删除指定的fd
+  1. `EPOLL_CTL_ADD`: 注册新的fd到epfd中
+  2. `EPOLL_CTL_MOD`: 修改已经注册的fd的监听事件
+  3. `EPOLL_CTL_DEL`: 从epfd中删除指定的fd
 - `fd`: 要监听的文件描述符fd
 - `event`: 注册的fd需要监听的事件,其为`struct epoll_event`类型:
 ```
@@ -91,7 +91,7 @@
         epoll_data_t data; 
     };
 ```
-其中events可以为如下几种类型：
+其中`events`可以为如下几种类型：
 1. `EPOLLIN`:表示对应的文件描述符可以读
 2. `EPOLLOUT`:表示对应的文件描述符可以写
 3. `EPOLLPRI`:表示对应的文件描述符由紧急数据可读
