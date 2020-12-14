@@ -61,7 +61,7 @@
 上述函数与以往的read和write函数不同，通过read和write函数读取到的数据可能比应该读到的要少，因为socket中的缓存已经到达了极限，需要重复调用read或write才可以输入或者输出剩余的字节，而上述函数就是为了解决这个问题。
 
 以readn为例
-
+    
     #include "unp.h"
 
     ssize_t readn(int fd, void *vptr, size_t n){
