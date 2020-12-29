@@ -59,10 +59,10 @@ int server_init(int maxsize, int server_fd){
     }
 
     struct epoll_event event;
-    event.data.fd = server_fd;
+    event.data.fd = servfd;
     event.events = EPOLLIN;
 
-    int ret = epoll_ctl(epoll_fd,EPOLL_CTL_ADD,server_fd,&event);
+    int ret = epoll_ctl(epoll_fd,EPOLL_CTL_ADD,servfd,&event);
 
     if (ret == -1) {
         perror("epoll_ctl:");
