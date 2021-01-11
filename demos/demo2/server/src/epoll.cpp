@@ -25,7 +25,6 @@ bool Epoll::init(int len)
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     int ret = bind(listen_socket,(struct sockaddr*)&addr,sizeof(addr));
-
     if (ret < 0) {
         return false;
     }
@@ -37,13 +36,11 @@ bool Epoll::init(int len)
     }  
 
     ret = listen(listen_socket,maxlen);
-
     if (ret < 0) {
         return false;
     }
 
     int epoll_fd = epoll_create(len);
-
     if (epoll_fd < 0) {
         return false;
     }
@@ -65,7 +62,7 @@ void Epoll::epoll_add(int client_fd)
     event.data.fd = client_fd;
     event.events = EPOLLIN;
 
-    if (epoll_ctl(this->epoll_fd_,EPOLL_CTL_ADD,client_fd,&event) == -1) {
+    if (epoll_ctl(epoll_fd_,EPOLL_CTL_ADD,client_fd,&event) == -1) {
         _exit(-1);
     }
 }
@@ -75,14 +72,10 @@ void Epoll::epoll_mod(int client_fd)
     return;
 }
 
-void Epoll::epoll_del(int client_fd)
-{
-    return;
-}
 
 void Epoll::getRequest()
 {
-    int nepoll = epoll_wait(this->epoll_fd_,this->events,this->max_epoll_,-1);
+    int nepoll = epoll_wait(epoll_fd_,events,max_epoll_,-1);
 
     for (int i = 0; i < nepoll; i++) {
         
@@ -94,3 +87,5 @@ void Epoll::getRequest()
         }
     }
 }
+
+void Epoll::add

@@ -8,6 +8,8 @@
 #define MAX_EPOLL 100
 #endif
 
+// 将epoll的功能包装起来
+
 class Epoll{    
     public:
         explicit Epoll(int port,int maxlen);
@@ -16,7 +18,7 @@ class Epoll{
         void epoll_del(int client_fd);
         void epoll_mod(int client_fd);
         void getRequest();
-        void addRequest();
+        void addRequest(); 
 
         inline int get_epoll_fd(){
             return this->epoll_fd_;
