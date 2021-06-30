@@ -8,17 +8,11 @@
 #include <sys/epoll.h>
 
 
-#ifndef PORT
-#define PORT 9990
-#endif
 
-#ifndef MAX_LINE
-#define MAX_LINE 4096
-#endif
 
-#ifndef MAXEVENTS 
-#define MAXEVENTS 20
-#endif
+
+
+
 
 int server_start(){
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -33,16 +27,12 @@ int server_start(){
     addr.sin_port = htons(9990);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    int ret = bind(server_socket,(struct sockaddr*)&addr,sizeof(addr));
-
-    if (ret) {
-        perror("bind addr failed\n");
+    if(bind(server_socket,(struct sockaddr*)&addr,sizeof(addr))){
+        printf("bind addr failed\n");
         return -1;
     }
 
-    ret = listen(server_socket,10);
-
-    if (ret) {
+    if(listen(server_socket,10)){
         printf("listen socket failed\n");
         return -1;
     }
@@ -59,10 +49,10 @@ int server_init(int maxsize, int server_fd){
     }
 
     struct epoll_event event;
-    event.data.fd = servfd;
+    event.data.fd = server_fd;
     event.events = EPOLLIN;
 
-    int ret = epoll_ctl(epoll_fd,EPOLL_CTL_ADD,servfd,&event);
+    int ret = epoll_ctl(epoll_fd,EPOLL_CTL_ADD,server_fd,&event);
 
     if (ret == -1) {
         perror("epoll_ctl:");
@@ -92,8 +82,6 @@ void epoll_del(int epoll_fd, int old_fd){
         return -1;
     }
 }
-
-
 
 void acceptConnection(int epoll_fd, int server_fd){
     struct sockaddr_in client_addr;
@@ -144,9 +132,6 @@ void getRequest(int epoll_fd, int server_fd ){
         }
     }
 }
-
-
-
 
 
 void handle_connect(int servfd){
