@@ -6,12 +6,14 @@
 namespace demo_server{
 
 class ThreadTask{
-    typedef function<void(void*)> callback;
+    typedef std::function<void(void*)> Callback;
 public:
-    ThreadTask();
+    ThreadTask(Callback& callback, void* args);
+
     void Run();
 private:
-    callback func_ ;
+    Callback func_ ;
+    void* args_;
 };
 }
 
