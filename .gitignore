@@ -1,3 +1,2 @@
-build/
-demos/demo1/server/build
-demos/demo1/client/build
+server/build
+client/build
