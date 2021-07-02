@@ -1,11 +1,7 @@
-#include <vector>
-
-using namespace std;
+#include "server/include/server.h"
 
 int main(){
-    vector<int> v;
-    for(int i = 0; i < 10; i++){
-        v.push_back(i);
-    }
-    return 0;
+    demo_server::DemoServer demo(10);
+    demo.InitServer();
+    demo.Loop();
 }

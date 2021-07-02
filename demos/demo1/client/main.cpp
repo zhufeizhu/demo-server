@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifndef PORT
 #define PORT 9990
@@ -17,18 +18,11 @@ void str_cli(FILE *file,int sockfd){
     while(fgets(sendline,MAX_LINE,file) != NULL) {
         if(send(sockfd,sendline,sizeof(sendline),0) < 0){
             perror("send failed");
-            return -1;
+            return;
         } else {
             printf("send msg success\n");
         }
-        
-        if(recv(sockfd,recvline,MAX_LINE,0) == 0) {
-            printf("read error\n");
-            return 0;
-        }
-        fputs(recvline,stdout);
     }
-    return 0;
 }
 
 int main(int argc, char* argv[]){

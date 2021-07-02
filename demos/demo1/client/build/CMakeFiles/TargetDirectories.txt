@@ -1,3 +1,0 @@
-/workspace/demo-server/demos/demo0/client/build/CMakeFiles/rebuild_cache.dir
-/workspace/demo-server/demos/demo0/client/build/CMakeFiles/edit_cache.dir
-/workspace/demo-server/demos/demo0/client/build/CMakeFiles/client.dir

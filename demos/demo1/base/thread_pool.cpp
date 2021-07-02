@@ -36,20 +36,22 @@ bool ThreadPool::AddTask(ThreadTask* task){
 
 void ThreadPool::Shutdown(){
     this->shutdown_.store(true);
+    cond.notify_all();//通知所有线程线程池关闭
 }
 
 void ThreadPool::Loop(){
-    std::cout<<"thread "<<std::this_thread::get_id()<<" start"<<std::endl;
-    for(;;){
-        ThreadTask* task;
+    while(!shutdown_){
+        ThreadTask* task = NULL;
         {
             unique_lock<mutex> lck(task_mutex_);
-            while(!shutdown_ && this->tasks_.empty()) cond.wait(lck);
+            cond.wait(lck,[this]{return this->shutdown_.load() || !this->tasks_.empty();});
             
-            task = this->tasks_.front();
-            this->tasks_.pop();
+            if(!shutdown_ && !this->tasks_.empty()){
+                task = this->tasks_.front();
+                this->tasks_.pop();
+            }
         }
-        task->Run();
+        if(task) task->Run();
     }
 }
 

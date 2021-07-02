@@ -7,43 +7,41 @@
 #include "../include/thread_pool.h"
 #include "../include/thread_task.h"
 
-// class ThreadPoolTest: public testing::Test{
-// protected:
-//     void SetUp() {
-//         pool = new demo_server::ThreadPool(5);
-//     };
+class ThreadPoolTest: public testing::Test{
+protected:
+    void SetUp() {
+        
+    };
 
-//     void TearDown() {
-//         delete pool;
-//     }
-//     demo_server::ThreadPool* pool;
-// };
+    void TearDown() {
+        
+    }
+    
+};
 
-
-
-// TEST_F(ThreadPoolTest,run){
-//     int a = 10;
-//     std::function<void(void*)> f = [](void* num){
-//         (*(int*)num)++;
-//     };
-//     demo_server::ThreadTask* task = new demo_server::ThreadTask(f,(void*)&a);
-//     pool->AddTask(task);
-//     EXPECT_EQ(a,11);
-//     pool->Shutdown();
-// }
+TEST_F(ThreadPoolTest,run){
+    int num = 0;
+    {
+        std::unique_ptr<demo_server::ThreadPool> poolPtr(new demo_server::ThreadPool(3));
+        std::function<void(void*)> f = [](void* num){
+            (*(int*)num)++;
+            std::cout<<*(int*)num<<std::endl;
+            sleep(3);
+        };
+        
+        for(int i = 0; i < 10; i++){
+            demo_server::ThreadTask* task = new demo_server::ThreadTask(f,(void*)&num);
+            poolPtr->AddTask(task);
+        }
+        sleep(20);
+        poolPtr->Shutdown();
+    }
+    EXPECT_EQ(num,10);
+    
+}
 
 
 int main(int argc, char** argv){
-    // ::testing::InitGoogleTest(&argc,argv);
-    // return RUN_ALL_TESTS();
-    std::unique_ptr<demo_server::ThreadPool> poolPtr(new demo_server::ThreadPool(3));
-    int a = 10;
-    std::function<void(void*)> f = [](void* num){
-        sleep(3);
-        std::cout<<*(int*)(num)<<"  "<<std::this_thread::get_id()<<std::endl;
-    };
-    for(int i = 0; i < 10; i++){
-        demo_server::ThreadTask* task = new demo_server::ThreadTask(f,(void*)&i);
-        poolPtr->AddTask(task);
-    }
+    ::testing::InitGoogleTest(&argc,argv);
+    return RUN_ALL_TESTS();
 }

@@ -4,7 +4,7 @@ project(client)
 
 set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 
-add_executable(client main.c)
+add_executable(client main.cpp)
 
 
 
