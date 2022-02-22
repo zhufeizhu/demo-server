@@ -1,4 +1,4 @@
-#include "include/server.h"
+#include "server.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -6,24 +6,23 @@
 #include <iostream>
 #include <stdio.h>
 
-#include "base/include/log.h"
+#include "log.h"
 
 
 namespace demo_server{
 
-DemoServer::DemoServer(int max_size){
+DemoServer::DemoServer(int max_size) noexcept{
     this->server_fd_ = socket(AF_INET,SOCK_STREAM,0);
 
     if(this->server_fd_ == -1){
         LOG(ERROR,"create socket_fd failed");
         return;
     }
-
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(9990);
+    addr.sin_port = htons(PORT);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
+    
     if(bind(this->server_fd_,(struct sockaddr*)&addr,sizeof(addr))){
         LOG(ERROR,"bind addr failed");
         return;
@@ -34,14 +33,14 @@ DemoServer::DemoServer(int max_size){
         return;
     }
 
-    poolPtr.reset(new ThreadPool(NUM_THREADS));
+    //poolPtr.reset(new ThreadPool(NUM_THREADS));
 }
 
 /**
  * 初始化server 将server_fd加入到epoll中
  * @param server_fd:server的句柄
 **/ 
-void DemoServer::InitServer(){
+void DemoServer::init_server(){
     this->epoll_fd_ = epoll_create(DemoServer::MAXEVENTS);
 
     if(this->epoll_fd_ == -1){
@@ -66,7 +65,7 @@ void DemoServer::InitServer(){
  * @param client_fd:要添加的client句柄
  * @param flag:client的模式
 **/ 
-int DemoServer::AddEpoll(int client_fd,__uint32_t flag){
+int DemoServer::add_epoll(int client_fd,__uint32_t flag){
     struct epoll_event event;
     event.data.fd = client_fd;
     event.events = flag;
@@ -74,6 +73,8 @@ int DemoServer::AddEpoll(int client_fd,__uint32_t flag){
     if(epoll_ctl(this->epoll_fd_,EPOLL_CTL_ADD,client_fd,&event)){
         LOG(INFO,"add client fd to epoll failed");
         return -1;
+    }else{
+        LOG(INFO,"add client fd to epoll succeed");
     }
     
     return 0;
@@ -82,7 +83,7 @@ int DemoServer::AddEpoll(int client_fd,__uint32_t flag){
 /**
  * 将client_fd从epoll中移除
 **/ 
-int DemoServer::DelEpoll(int client_fd){
+int DemoServer::del_epoll(int client_fd){
     struct epoll_event event;
     event.data.fd = client_fd;
     
@@ -93,39 +94,62 @@ int DemoServer::DelEpoll(int client_fd){
     return 0;
 }
 
-void DemoServer::HandleRequest(struct epoll_event event){
-    function<void(void*)> func= [](void* str){
-        std::cout<<(char*)str<<std::endl;
-    };
-    char msg[200];
-    recv(event.data.fd,msg,200,0);
-    ThreadTask* task = new ThreadTask(func,msg);
-    poolPtr->AddTask(task);
+/*
+    接收到请求后将收到的消息打印出来
+*/
+void DemoServer::handle_request(struct epoll_event event){
+    // auto func= [](void* str){
+    //     std::cout<<(char*)str<<std::endl;
+    // };
+    int len = 10;
+    char msg[10];
+    int n = 0;
+    while(len > 0){
+        n = recv(event.data.fd,msg + n,len,0);
+        len -= n;
+    }
+    
+    std::cout<<"New Message is: "<<msg<<std::endl;
+    // ThreadTask* task = new ThreadTask(func,msg);
+    // poolPtr->add_task(task);
 }
 
-void DemoServer::AcceptConnection(){
-    LOG(INFO,"connect suucceed");
+void DemoServer::accept_connection(){
     struct sockaddr_in client;
     bzero((void*)&client,sizeof(client));
     unsigned int client_len = 0;
-    int accept_fd = 0;
-    while(accept_fd = accept(this->server_fd_,(struct sockaddr*)(&client),&client_len) >0){
-        __uint32_t flag = EPOLLIN | EPOLLET | EPOLLONESHOT;//可读时触发 边缘触发 触发一次后从epoll中移除
-        AddEpoll(accept_fd,flag);
+    int accept_fd = accept(this->server_fd_,(struct sockaddr*)(&client),&client_len);
+    if(accept_fd < 0){
+        LOG(ERROR,"connect failed");
+    }else{
+        LOG(INFO,"connect suucceed");
     }
+    __uint32_t flag = EPOLLIN | EPOLLET;//可读时触发 边缘触发 触发一次后从epoll中移除
+    add_epoll(accept_fd,flag);
 }
 
-void DemoServer::Loop(){
+void DemoServer::close_connection(struct epoll_event event){
+    std::cout<<"fd " << event.data.fd << " 的连接已经断开!"<<std::endl;
+    del_epoll(event.data.fd);
+}
+
+void DemoServer::loop(){
     struct epoll_event events[MAXEVENTS];
     int num_fds = 0;
     for(;;){
+        std::cout<<"Looping~"<<std::endl;
         num_fds = epoll_wait(this->epoll_fd_,events,MAXEVENTS,-1);
+        std::cout<<"num fd is "<<num_fds<<std::endl;
         for(int i = 0; i < num_fds; i++){
             if(events[i].data.fd == this->server_fd_){
-                AcceptConnection();
-            }else if(events[i].events & EPOLLIN){
-                HandleRequest(events[i]);
+                accept_connection();
+            }else if(events[i].events & EPOLLHUP){ //表示断开
+                close_connection(events[i]);
             }
+            else if(events[i].events & EPOLLIN) {
+                std::cout<<"New Request comimg!"<<std::endl;
+                handle_request(events[i]);
+            }   
         }
     }
 }
