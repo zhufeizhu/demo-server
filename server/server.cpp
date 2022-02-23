@@ -1,7 +1,5 @@
 #include "server.h"
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
 #include <iostream>
 #include <stdio.h>
@@ -108,8 +106,11 @@ void DemoServer::handle_request(struct epoll_event event){
         n = recv(event.data.fd,msg + n,len,0);
         len -= n;
     }
+    auto iter = connections_.find(event.data.fd);
+    if(iter != connections_.end()){
+        std::cout<<connections_[event.data.fd]<<"New Message is: "<<msg<<std::endl;
+    }
     
-    std::cout<<"New Message is: "<<msg<<std::endl;
     // ThreadTask* task = new ThreadTask(func,msg);
     // poolPtr->add_task(task);
 }
@@ -117,20 +118,31 @@ void DemoServer::handle_request(struct epoll_event event){
 void DemoServer::accept_connection(){
     struct sockaddr_in client;
     bzero((void*)&client,sizeof(client));
-    unsigned int client_len = 0;
-    int accept_fd = accept(this->server_fd_,(struct sockaddr*)(&client),&client_len);
+    unsigned int client_len = sizeof(client);
+    int accept_fd = accept(this->server_fd_,(struct sockaddr*)&client,&client_len);
     if(accept_fd < 0){
         LOG(ERROR,"connect failed");
+        return;
     }else{
+        //getsockname(accept_fd,(struct sockaddr*)&client,&client_len);
+        std::cout<<inet_ntoa(client.sin_addr)<<std::endl;
+        std::cout<<ntohs(client.sin_port)<<std::endl;
         LOG(INFO,"connect suucceed");
     }
     __uint32_t flag = EPOLLIN | EPOLLET;//可读时触发 边缘触发 触发一次后从epoll中移除
-    add_epoll(accept_fd,flag);
+    if(!add_epoll(accept_fd,flag)){
+        connections_[accept_fd] = client;
+    }
 }
 
 void DemoServer::close_connection(struct epoll_event event){
     std::cout<<"fd " << event.data.fd << " 的连接已经断开!"<<std::endl;
-    del_epoll(event.data.fd);
+    if(!del_epoll(event.data.fd)){
+        auto iter = connections_.find(event.data.fd);
+        if( iter != connections_.end()){
+            connections_.erase(iter);
+        }
+    }
 }
 
 void DemoServer::loop(){
