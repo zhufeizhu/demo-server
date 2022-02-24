@@ -1,46 +1,47 @@
-// #ifndef DEMO_THREAD_H
-// #define DEMO_THREAD_H
+#ifndef DEMO_SERVER_THREADPOOL_H_
+#define DEMO_SERVER_THREADPOOL_H_
 
-// #include <thread>
-// #include <mutex> 
-// #include <queue>
-// #include <vector>
-// #include <atomic>
-// #include <condition_variable>
+#include <thread>
+#include <mutex> 
+#include <queue>
+#include <vector>
+#include <atomic>
+#include <condition_variable>
+#include "task.h"
 
-// #include "thread_task.h"
-// #include "noncopyable.h"
-// #include "nonmoveable.h"
+namespace demo_server{
 
-// namespace demo_server{
+class Task;
 
-// class ThreadPool : public T1, public T2 {
-// public:
-//     ThreadPool();
+class ThreadPool{
+public:
+    using Task_Ptr = std::unique_ptr<Task>;
 
-//     ThreadPool(int num_threads);
+    ThreadPool();
+
+    ThreadPool(int num_threads);
     
-//     void shutdown();
+    void shutdown();
 
-//     bool add_task(ThreadTask* task);
+    bool add_task(Task_Ptr);
     
-//     ~ThreadPool();
-// private:
-//     const int min_num_threads_ = 5;
-//     const int max_num_threads = 20;
-//     std::condition_variable cond;
-//     int num_thread_;
+    ~ThreadPool();
+private:
+    const int min_num_threads_ = 1;  //最小线程数
+    const int max_num_threads_ = 20; //最大线程数
+    int num_thread_;
 
-//     std::vector<std::thread> threads_;
-//     std::atomic<bool> shutdown_;
-//     std::mutex thread_mutex_;
-//     std::mutex task_mutex_;
-//     std::queue<ThreadTask*> tasks_;
+    std::atomic_bool shutdown_;
 
-//     /*每个线程的主循环体*/
-//     void loop();
-// };
+    std::vector<std::thread> threads_;
 
-// }
+    std::queue<Task_Ptr> tasks_;
 
-// #endif
+    std::mutex task_mutex_;
+
+    /*每个线程的主循环体*/
+    void loop();
+};
+
+}
+#endif

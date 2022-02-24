@@ -2,8 +2,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.5.0)
 
 project(server)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+add_definitions(-g)
 
 aux_source_directory(./ SERVER_SRC_LIST)
 

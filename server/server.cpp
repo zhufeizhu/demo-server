@@ -4,8 +4,8 @@
 #include <iostream>
 #include <stdio.h>
 
+#include "thread_pool.h"
 #include "log.h"
-
 
 namespace demo_server{
 
@@ -20,6 +20,7 @@ DemoServer::DemoServer(int max_size) noexcept{
     addr.sin_family = AF_INET;
     addr.sin_port = htons(PORT);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    root_path_ = "/home/zhuqs/workspace/demo-server/server/file";
     
     if(bind(this->server_fd_,(struct sockaddr*)&addr,sizeof(addr))){
         LOG(ERROR,"bind addr failed");
@@ -31,7 +32,9 @@ DemoServer::DemoServer(int max_size) noexcept{
         return;
     }
 
-    //poolPtr.reset(new ThreadPool(NUM_THREADS));
+    pool_ptr_ = std::make_unique<ThreadPool>(1);
+
+    LOG(INFO,"create demo server succeed");
 }
 
 /**
@@ -39,6 +42,7 @@ DemoServer::DemoServer(int max_size) noexcept{
  * @param server_fd:server的句柄
 **/ 
 void DemoServer::init_server(){
+    LOG(INFO,"begin init server");
     this->epoll_fd_ = epoll_create(DemoServer::MAXEVENTS);
 
     if(this->epoll_fd_ == -1){
@@ -55,6 +59,7 @@ void DemoServer::init_server(){
         LOG(ERROR,"add server fd failed");
         return;
     }
+    LOG(INFO,"init server succeed");
 }
 
 /**
@@ -109,10 +114,9 @@ void DemoServer::handle_request(struct epoll_event event){
     auto iter = connections_.find(event.data.fd);
     if(iter != connections_.end()){
         std::cout<<connections_[event.data.fd]<<"New Message is: "<<msg<<std::endl;
+        std::unique_ptr<Task> p(new FileTask(std::string(DemoServer::root_path_) + std::string("/") + std::string(msg),iter->second));
+        pool_ptr_->add_task(std::move(p));
     }
-    
-    // ThreadTask* task = new ThreadTask(func,msg);
-    // poolPtr->add_task(task);
 }
 
 void DemoServer::accept_connection(){
@@ -131,10 +135,13 @@ void DemoServer::accept_connection(){
     }
     __uint32_t flag = EPOLLIN | EPOLLET;//可读时触发 边缘触发 触发一次后从epoll中移除
     if(!add_epoll(accept_fd,flag)){
-        connections_[accept_fd] = client;
+        connections_[accept_fd] = std::make_shared<Sock>(accept_fd,client);
     }
 }
 
+/**
+* close_connection
+**/
 void DemoServer::close_connection(struct epoll_event event){
     std::cout<<"fd " << event.data.fd << " 的连接已经断开!"<<std::endl;
     if(!del_epoll(event.data.fd)){
@@ -145,6 +152,10 @@ void DemoServer::close_connection(struct epoll_event event){
     }
 }
 
+/**
+ * @brief
+ * 
+ */
 void DemoServer::loop(){
     struct epoll_event events[MAXEVENTS];
     int num_fds = 0;
